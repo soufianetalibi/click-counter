@@ -1,4 +1,4 @@
-# Compteur de clics
+﻿# Compteur de clics
 
 Petit projet pour tester GitHub. Ce projet affiche un compteur qui s'incrémente à chaque clic sur un bouton.
 
@@ -27,6 +27,7 @@ click-counter/
   git commit -m "Initial commit"
 
 4-Crée un dépôt vide sur GitHub nommé "click-counter"
+
 5-push : 
 
   git remote add origin https://github.com/ton-nom-utilisateur/click-counter.git
@@ -52,3 +53,41 @@ click-counter/
   cd Spoon-Knife
   git branch
   git remote -v
+  
+  =====================================
+
+1.Synchroniser : Local ⇄ GitHub (push, pull)
+
+2.Branches : Travailler sur des fonctionnalités isolées, créer une branche pour chaque nouvelle fonctionnalité, à la fin la fusionner avec la branche main.
+
+3.Collaboration : Travailler à plusieurs, je fais un push et mon collègue fait un pull : git pull origin main
+
+ Réinitialisation locale depuis GitHub
+ Tu veux revenir à l’état exact du dépôt GitHub  (perds les modifs locales)
+   git fetch origin
+   git reset --hard origin/main
+
+git log            # voir les commits
+git diff           # voir les différences non commitées
+git diff HEAD~1    # voir les changements du dernier commit
+
+7. Créer un tag ou une release
+
+git tag v1.0.0
+git push origin v1.0.0
+
+====GitHub Workflows : 
+
+ ou plus précisément GitHub Actions
+
+ permettent d’automatiser des tâches quand quelque chose se passe sur le dépôt GitHub, ex : commit, push, pull request : 
+
+-Compiler ton code
+
+-Lancer des tests
+
+-Déployer sur un serveur
+
+-Créer une release
+
+-Exécuter un script
