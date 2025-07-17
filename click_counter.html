@@ -1,0 +1,717 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ClickMaster - Compteur Ultime</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap');
+        
+        body {
+            font-family: 'Inter', sans-serif;
+        }
+        
+        .gradient-bg {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        }
+        
+        .glass-effect {
+            backdrop-filter: blur(20px);
+            background: rgba(255, 255, 255, 0.1);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+        }
+        
+        .pulse-ring {
+            animation: pulse-ring 1.5s cubic-bezier(0.215, 0.61, 0.355, 1) infinite;
+        }
+        
+        @keyframes pulse-ring {
+            0% {
+                transform: scale(0.33);
+                opacity: 1;
+            }
+            80%, 100% {
+                transform: scale(2.4);
+                opacity: 0;
+            }
+        }
+        
+        .click-ripple {
+            position: absolute;
+            border-radius: 50%;
+            background: rgba(255, 255, 255, 0.6);
+            transform: scale(0);
+            animation: ripple 0.6s linear;
+            pointer-events: none;
+        }
+        
+        @keyframes ripple {
+            to {
+                transform: scale(4);
+                opacity: 0;
+            }
+        }
+        
+        .floating {
+            animation: floating 3s ease-in-out infinite;
+        }
+        
+        @keyframes floating {
+            0%, 100% { transform: translateY(0px); }
+            50% { transform: translateY(-20px); }
+        }
+        
+        .glow {
+            box-shadow: 0 0 20px rgba(102, 126, 234, 0.5);
+        }
+        
+        .stats-card {
+            transition: all 0.3s ease;
+        }
+        
+        .stats-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
+        }
+        
+        .number-counter {
+            font-variant-numeric: tabular-nums;
+        }
+        
+        .particle {
+            position: absolute;
+            width: 4px;
+            height: 4px;
+            background: #fbbf24;
+            border-radius: 50%;
+            pointer-events: none;
+            animation: particle-float 2s ease-out forwards;
+        }
+        
+        @keyframes particle-float {
+            0% {
+                transform: translateY(0) scale(1);
+                opacity: 1;
+            }
+            100% {
+                transform: translateY(-100px) scale(0);
+                opacity: 0;
+            }
+        }
+        
+        .modal {
+            transition: all 0.3s ease;
+        }
+        
+        .slide-in {
+            animation: slideIn 0.5s ease-out;
+        }
+        
+        @keyframes slideIn {
+            from {
+                transform: translateY(-100px);
+                opacity: 0;
+            }
+            to {
+                transform: translateY(0);
+                opacity: 1;
+            }
+        }
+        
+        .fade-in {
+            animation: fadeIn 0.5s ease-out;
+        }
+        
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+    </style>
+</head>
+<body class="gradient-bg min-h-screen overflow-x-hidden">
+    <!-- Modal de connexion -->
+    <div id="loginModal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+        <div class="glass-effect rounded-2xl p-8 max-w-md w-full mx-4 slide-in">
+            <h2 class="text-3xl font-bold text-white text-center mb-6">
+                🎯 Bienvenue sur ClickMaster
+            </h2>
+            <p class="text-white/80 text-center mb-8">
+                Entrez votre prénom pour commencer à jouer et sauvegarder vos scores !
+            </p>
+            <div class="space-y-4">
+                <input 
+                    type="text" 
+                    id="playerName" 
+                    placeholder="Votre prénom..."
+                    class="w-full p-4 bg-white/10 border border-white/20 rounded-xl text-white placeholder-white/60 focus:outline-none focus:border-white/40 transition-all"
+                    maxlength="15"
+                >
+                <button 
+                    id="startGame"
+                    class="w-full py-4 bg-gradient-to-r from-green-400 to-blue-500 text-white font-bold rounded-xl hover:from-green-500 hover:to-blue-600 transition-all transform hover:scale-105 disabled:opacity-50 disabled:cursor-not-allowed"
+                    disabled
+                >
+                    Commencer à jouer
+                </button>
+            </div>
+            <div class="mt-6 text-center">
+                <p class="text-white/60 text-sm">
+                    Vos scores seront sauvegardés pendant cette session
+                </p>
+            </div>
+        </div>
+    </div>
+
+    <!-- Particules d'arrière-plan -->
+    <div class="fixed inset-0 pointer-events-none">
+        <div class="absolute top-20 left-20 w-2 h-2 bg-white rounded-full opacity-20 floating"></div>
+        <div class="absolute top-40 right-32 w-3 h-3 bg-purple-300 rounded-full opacity-30 floating" style="animation-delay: 1s;"></div>
+        <div class="absolute bottom-40 left-40 w-2 h-2 bg-blue-300 rounded-full opacity-25 floating" style="animation-delay: 2s;"></div>
+        <div class="absolute bottom-20 right-20 w-4 h-4 bg-pink-300 rounded-full opacity-20 floating" style="animation-delay: 0.5s;"></div>
+    </div>
+
+    <!-- Navigation -->
+    <nav class="glass-effect fixed top-0 left-0 right-0 z-40">
+        <div class="container mx-auto px-6 py-4">
+            <div class="flex items-center justify-between">
+                <div class="flex items-center space-x-2">
+                    <div class="w-8 h-8 bg-gradient-to-r from-yellow-400 to-orange-500 rounded-lg flex items-center justify-center">
+                        <span class="text-white font-bold text-lg">C</span>
+                    </div>
+                    <h1 class="text-white font-bold text-xl">ClickMaster</h1>
+                </div>
+                <div class="flex items-center space-x-6">
+                    <div class="flex items-center space-x-2">
+                        <div class="w-8 h-8 bg-gradient-to-r from-purple-400 to-pink-500 rounded-full flex items-center justify-center">
+                            <span class="text-white font-bold text-sm" id="playerInitial">?</span>
+                        </div>
+                        <span class="text-white font-medium" id="playerDisplayName">Joueur</span>
+                    </div>
+                    <button id="resetSession" class="text-white hover:text-red-300 transition-colors">
+                        🔄 Nouvelle session
+                    </button>
+                    <button id="logoutBtn" class="text-white hover:text-yellow-300 transition-colors">
+                        🚪 Déconnexion
+                    </button>
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Contenu principal -->
+    <div id="gameContent" class="container mx-auto px-6 pt-24 pb-12 fade-in" style="display: none;">
+        <!-- En-tête avec salutation personnalisée -->
+        <div class="text-center mb-12">
+            <h2 class="text-6xl font-bold text-white mb-4">
+                Salut <span id="playerGreeting" class="text-yellow-300">Joueur</span> ! 👋
+            </h2>
+            <p class="text-xl text-white/80 max-w-2xl mx-auto">
+                Prêt à défier vos limites ? Chaque clic vous rapproche de la gloire !
+            </p>
+        </div>
+
+        <!-- Session Stats -->
+        <div class="glass-effect rounded-2xl p-6 mb-8 text-center">
+            <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
+                <div>
+                    <div class="text-2xl font-bold text-white number-counter" id="currentSession">Session #1</div>
+                    <div class="text-white/70 text-sm">Session actuelle</div>
+                </div>
+                <div>
+                    <div class="text-2xl font-bold text-white number-counter" id="totalSessions">1</div>
+                    <div class="text-white/70 text-sm">Total sessions</div>
+                </div>
+                <div>
+                    <div class="text-2xl font-bold text-white number-counter" id="allTimeBest">0</div>
+                    <div class="text-white/70 text-sm">Record personnel</div>
+                </div>
+                <div>
+                    <div class="text-2xl font-bold text-white number-counter" id="sessionStartTime">00:00</div>
+                    <div class="text-white/70 text-sm">Heure de début</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Compteur principal -->
+        <div class="flex justify-center mb-12">
+            <div class="relative">
+                <!-- Anneaux de pulse -->
+                <div class="absolute inset-0 bg-white/20 rounded-full pulse-ring"></div>
+                <div class="absolute inset-0 bg-white/10 rounded-full pulse-ring" style="animation-delay: 0.5s;"></div>
+                
+                <!-- Bouton principal -->
+                <button id="mainButton" class="relative w-64 h-64 bg-gradient-to-br from-yellow-400 via-orange-500 to-red-500 rounded-full text-white font-bold text-6xl shadow-2xl hover:scale-105 transition-all duration-300 glow">
+                    <span id="clickCount" class="number-counter">0</span>
+                </button>
+            </div>
+        </div>
+
+        <!-- Statistiques -->
+        <div class="grid grid-cols-1 md:grid-cols-4 gap-6 mb-12">
+            <div class="stats-card glass-effect rounded-2xl p-6 text-center">
+                <div class="text-3xl font-bold text-white mb-2 number-counter" id="totalClicks">0</div>
+                <div class="text-white/70">Clics cette session</div>
+            </div>
+            <div class="stats-card glass-effect rounded-2xl p-6 text-center">
+                <div class="text-3xl font-bold text-white mb-2 number-counter" id="clickRate">0</div>
+                <div class="text-white/70">Clics/seconde</div>
+            </div>
+            <div class="stats-card glass-effect rounded-2xl p-6 text-center">
+                <div class="text-3xl font-bold text-white mb-2 number-counter" id="bestStreak">0</div>
+                <div class="text-white/70">Meilleure série</div>
+            </div>
+            <div class="stats-card glass-effect rounded-2xl p-6 text-center">
+                <div class="text-3xl font-bold text-white mb-2 number-counter" id="sessionTime">0s</div>
+                <div class="text-white/70">Temps de session</div>
+            </div>
+        </div>
+
+        <!-- Historique des sessions -->
+        <div class="glass-effect rounded-2xl p-8 mb-12">
+            <h3 class="text-3xl font-bold text-white mb-6 text-center">📊 Historique des Sessions</h3>
+            <div id="sessionHistory" class="space-y-3">
+                <!-- Les sessions seront ajoutées ici dynamiquement -->
+            </div>
+        </div>
+
+        <!-- Défis -->
+        <div class="glass-effect rounded-2xl p-8 mb-12">
+            <h3 class="text-3xl font-bold text-white mb-6 text-center">🏆 Défis Personnels</h3>
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+                <div class="bg-white/10 rounded-xl p-6 text-center">
+                    <div class="text-4xl mb-4">🎯</div>
+                    <h4 class="text-xl font-semibold text-white mb-2">Première Étape</h4>
+                    <p class="text-white/70 mb-4">Atteignez 100 clics</p>
+                    <div class="w-full bg-white/20 rounded-full h-2">
+                        <div id="challenge1" class="bg-gradient-to-r from-green-400 to-blue-500 h-2 rounded-full transition-all duration-300" style="width: 0%"></div>
+                    </div>
+                </div>
+                <div class="bg-white/10 rounded-xl p-6 text-center">
+                    <div class="text-4xl mb-4">🚀</div>
+                    <h4 class="text-xl font-semibold text-white mb-2">Vitesse</h4>
+                    <p class="text-white/70 mb-4">5 clics/seconde</p>
+                    <div class="w-full bg-white/20 rounded-full h-2">
+                        <div id="challenge2" class="bg-gradient-to-r from-purple-400 to-pink-500 h-2 rounded-full transition-all duration-300" style="width: 0%"></div>
+                    </div>
+                </div>
+                <div class="bg-white/10 rounded-xl p-6 text-center">
+                    <div class="text-4xl mb-4">💎</div>
+                    <h4 class="text-xl font-semibold text-white mb-2">Maître</h4>
+                    <p class="text-white/70 mb-4">1000 clics total</p>
+                    <div class="w-full bg-white/20 rounded-full h-2">
+                        <div id="challenge3" class="bg-gradient-to-r from-yellow-400 to-orange-500 h-2 rounded-full transition-all duration-300" style="width: 0%"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Leaderboard personnel -->
+        <div class="glass-effect rounded-2xl p-8">
+            <h3 class="text-3xl font-bold text-white mb-6 text-center">🏅 Vos Meilleurs Scores</h3>
+            <div id="personalLeaderboard" class="space-y-4">
+                <!-- Les scores seront ajoutés ici dynamiquement -->
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Variables de session et joueur
+        let playerData = {
+            name: '',
+            sessions: [],
+            allTimeBest: 0,
+            totalSessions: 0,
+            currentSessionId: 1
+        };
+
+        // Variables de jeu
+        let clickCount = 0;
+        let clickTimes = [];
+        let sessionStart = Date.now();
+        let bestStreak = 0;
+        let currentStreak = 0;
+        let lastClickTime = 0;
+        let gameActive = false;
+
+        // Éléments DOM
+        const loginModal = document.getElementById('loginModal');
+        const playerNameInput = document.getElementById('playerName');
+        const startGameBtn = document.getElementById('startGame');
+        const gameContent = document.getElementById('gameContent');
+        const mainButton = document.getElementById('mainButton');
+        const resetSessionBtn = document.getElementById('resetSession');
+        const logoutBtn = document.getElementById('logoutBtn');
+
+        // Éléments d'affichage
+        const elements = {
+            playerInitial: document.getElementById('playerInitial'),
+            playerDisplayName: document.getElementById('playerDisplayName'),
+            playerGreeting: document.getElementById('playerGreeting'),
+            clickCount: document.getElementById('clickCount'),
+            totalClicks: document.getElementById('totalClicks'),
+            clickRate: document.getElementById('clickRate'),
+            bestStreak: document.getElementById('bestStreak'),
+            sessionTime: document.getElementById('sessionTime'),
+            currentSession: document.getElementById('currentSession'),
+            totalSessions: document.getElementById('totalSessions'),
+            allTimeBest: document.getElementById('allTimeBest'),
+            sessionStartTime: document.getElementById('sessionStartTime'),
+            sessionHistory: document.getElementById('sessionHistory'),
+            personalLeaderboard: document.getElementById('personalLeaderboard')
+        };
+
+        // Initialisation
+        document.addEventListener('DOMContentLoaded', function() {
+            // Vérifier si une session existe déjà
+            const savedPlayerData = getPlayerData();
+            if (savedPlayerData && savedPlayerData.name) {
+                playerData = savedPlayerData;
+                startNewSession();
+            }
+        });
+
+        // Gestion de la saisie du nom
+        playerNameInput.addEventListener('input', function() {
+            const name = this.value.trim();
+            startGameBtn.disabled = name.length < 2;
+            
+            if (name.length >= 2) {
+                startGameBtn.textContent = `Jouer en tant que ${name}`;
+            } else {
+                startGameBtn.textContent = 'Commencer à jouer';
+            }
+        });
+
+        // Gestion de la touche Entrée
+        playerNameInput.addEventListener('keypress', function(e) {
+            if (e.key === 'Enter' && !startGameBtn.disabled) {
+                startGameBtn.click();
+            }
+        });
+
+        // Démarrage du jeu
+        startGameBtn.addEventListener('click', function() {
+            const name = playerNameInput.value.trim();
+            if (name.length >= 2) {
+                playerData.name = name;
+                startNewSession();
+            }
+        });
+
+        // Nouvelle session
+        resetSessionBtn.addEventListener('click', function() {
+            if (confirm('Êtes-vous sûr de vouloir commencer une nouvelle session ?')) {
+                saveCurrentSession();
+                startNewSession();
+            }
+        });
+
+        // Déconnexion
+        logoutBtn.addEventListener('click', function() {
+            if (confirm('Êtes-vous sûr de vouloir vous déconnecter ?')) {
+                saveCurrentSession();
+                logout();
+            }
+        });
+
+        // Fonction pour démarrer une nouvelle session
+        function startNewSession() {
+            // Réinitialiser les variables de jeu
+            clickCount = 0;
+            clickTimes = [];
+            sessionStart = Date.now();
+            bestStreak = 0;
+            currentStreak = 0;
+            lastClickTime = 0;
+            gameActive = true;
+
+            // Mettre à jour les données du joueur
+            playerData.currentSessionId = (playerData.sessions.length || 0) + 1;
+            playerData.totalSessions = playerData.currentSessionId;
+
+            // Mettre à jour l'affichage
+            updatePlayerDisplay();
+            updateSessionDisplay();
+            updateStats();
+
+            // Cacher le modal et montrer le jeu
+            loginModal.style.display = 'none';
+            gameContent.style.display = 'block';
+
+            // Sauvegarder
+            savePlayerData();
+        }
+
+        // Fonction pour sauvegarder la session actuelle
+        function saveCurrentSession() {
+            if (!gameActive) return;
+
+            const sessionData = {
+                id: playerData.currentSessionId,
+                startTime: sessionStart,
+                endTime: Date.now(),
+                clickCount: clickCount,
+                bestStreak: bestStreak,
+                duration: Date.now() - sessionStart,
+                date: new Date().toLocaleDateString('fr-FR')
+            };
+
+            playerData.sessions.push(sessionData);
+            
+            // Mettre à jour le record personnel
+            if (clickCount > playerData.allTimeBest) {
+                playerData.allTimeBest = clickCount;
+            }
+
+            // Garder seulement les 10 dernières sessions
+            if (playerData.sessions.length > 10) {
+                playerData.sessions = playerData.sessions.slice(-10);
+            }
+
+            savePlayerData();
+            updateSessionHistory();
+            updatePersonalLeaderboard();
+        }
+
+        // Fonction pour se déconnecter
+        function logout() {
+            playerData = {
+                name: '',
+                sessions: [],
+                allTimeBest: 0,
+                totalSessions: 0,
+                currentSessionId: 1
+            };
+            gameActive = false;
+            
+            // Réinitialiser le formulaire
+            playerNameInput.value = '';
+            startGameBtn.disabled = true;
+            startGameBtn.textContent = 'Commencer à jouer';
+            
+            // Cacher le jeu et montrer le modal
+            gameContent.style.display = 'none';
+            loginModal.style.display = 'flex';
+            
+            // Nettoyer le stockage
+            clearPlayerData();
+        }
+
+        // Fonction pour mettre à jour l'affichage du joueur
+        function updatePlayerDisplay() {
+            const name = playerData.name;
+            elements.playerInitial.textContent = name.charAt(0).toUpperCase();
+            elements.playerDisplayName.textContent = name;
+            elements.playerGreeting.textContent = name;
+        }
+
+        // Fonction pour mettre à jour l'affichage de la session
+        function updateSessionDisplay() {
+            elements.currentSession.textContent = `Session #${playerData.currentSessionId}`;
+            elements.totalSessions.textContent = playerData.totalSessions;
+            elements.allTimeBest.textContent = playerData.allTimeBest;
+            elements.sessionStartTime.textContent = new Date(sessionStart).toLocaleTimeString('fr-FR', {
+                hour: '2-digit',
+                minute: '2-digit'
+            });
+        }
+
+        // Fonction pour mettre à jour l'historique des sessions
+        function updateSessionHistory() {
+            const historyContainer = elements.sessionHistory;
+            historyContainer.innerHTML = '';
+
+            const recentSessions = playerData.sessions.slice(-5).reverse();
+            
+            if (recentSessions.length === 0) {
+                historyContainer.innerHTML = '<div class="text-center text-white/60">Aucune session terminée</div>';
+                return;
+            }
+
+            recentSessions.forEach((session, index) => {
+                const duration = Math.floor(session.duration / 1000);
+                const isCurrentBest = session.clickCount === playerData.allTimeBest;
+                
+                const sessionElement = document.createElement('div');
+                sessionElement.className = `flex items-center justify-between bg-white/10 rounded-xl p-4 ${isCurrentBest ? 'ring-2 ring-yellow-400' : ''}`;
+                sessionElement.innerHTML = `
+                    <div class="flex items-center space-x-4">
+                        <div class="w-10 h-10 bg-gradient-to-r from-blue-400 to-purple-500 rounded-full flex items-center justify-center text-white font-bold">
+                            ${session.id}
+                        </div>
+                        <div>
+                            <div class="text-white font-semibold">${session.date}</div>
+                            <div class="text-white/70 text-sm">${duration}s de jeu</div>
+                        </div>
+                    </div>
+                    <div class="text-right">
+                        <div class="text-white font-bold text-lg">${session.clickCount} clics</div>
+                        <div class="text-white/70 text-sm">Série max: ${session.bestStreak}</div>
+                        ${isCurrentBest ? '<div class="text-yellow-400 text-xs">🏆 Record!</div>' : ''}
+                    </div>
+                `;
+                historyContainer.appendChild(sessionElement);
+            });
+        }
+
+        // Fonction pour mettre à jour le leaderboard personnel
+        function updatePersonalLeaderboard() {
+            const leaderboardContainer = elements.personalLeaderboard;
+            leaderboardContainer.innerHTML = '';
+
+            const topSessions = [...playerData.sessions]
+                .sort((a, b) => b.clickCount - a.clickCount)
+                .slice(0, 5);
+
+            if (topSessions.length === 0) {
+                leaderboardContainer.innerHTML = '<div class="text-center text-white/60">Terminez une session pour voir vos scores</div>';
+                return;
+            }
+
+            topSessions.forEach((session, index) => {
+                const medal = index === 0 ? '🥇' : index === 1 ? '🥈' : index === 2 ? '🥉' : '🏅';
+                const bgColor = index === 0 ? 'bg-yellow-500/20' : index === 1 ? 'bg-gray-400/20' : index === 2 ? 'bg-orange-500/20' : 'bg-white/5';
+                
+                const sessionElement = document.createElement('div');
+                sessionElement.className = `flex items-center justify-between ${bgColor} rounded-xl p-4`;
+                sessionElement.innerHTML = `
+                    <div class="flex items-center space-x-4">
+                        <div class="text-2xl">${medal}</div>
+                        <div>
+                            <div class="text-white font-semibold">Session #${session.id}</div>
+                            <div class="text-white/70 text-sm">${session.date}</div>
+                        </div>
+                    </div>
+                    <div class="text-right">
+                        <div class="text-white font-bold text-xl">${session.clickCount}</div>
+                        <div class="text-white/70 text-sm">clics</div>
+                    </div>
+                `;
+                leaderboardContainer.appendChild(sessionElement);
+            });
+        }
+
+        // Fonctions de persistance (utilisant des variables en mémoire)
+        function savePlayerData() {
+            // Dans un vrai projet, on utiliserait localStorage
+            // mais ici on simule avec des variables en mémoire
+            window.tempPlayerData = JSON.parse(JSON.stringify(playerData));
+        }
+
+        function getPlayerData() {
+            return window.tempPlayerData ? JSON.parse(JSON.stringify(window.tempPlayerData)) : null;
+        }
+
+        function clearPlayerData() {
+            window.tempPlayerData = null;
+        }
+
+        // Fonction pour créer des particules
+        function createParticles(x, y) {
+            for (let i = 0; i < 5; i++) {
+                const particle = document.createElement('div');
+                particle.className = 'particle';
+                particle.style.left = (x - 2) + 'px';
+                particle.style.top = (y - 2) + 'px';
+                particle.style.animationDelay = (i * 0.1) + 's';
+                document.body.appendChild(particle);
+                
+                setTimeout(() => {
+                    particle.remove();
+                }, 2000);
+            }
+        }
+
+        // Fonction pour créer l'effet de ripple
+        function createRipple(e) {
+            const circle = document.createElement('div');
+            const diameter = Math.max(mainButton.clientWidth, mainButton.clientHeight);
+            const radius = diameter / 2;
+            
+            circle.style.width = circle.style.height = `${diameter}px`;
+            circle.className = 'click-ripple';
+            
+            const rect = mainButton.getBoundingClientRect();
+            circle.style.left = `${e.clientX - rect.left - radius}px`;
+            circle.style.top = `${e.clientY - rect.top - radius}px`;
+            
+            mainButton.appendChild(circle);
+            
+            setTimeout(() => {
+                circle.remove();
+            }, 600);
+        }
+
+        // Fonction pour mettre à jour les statistiques
+        function updateStats() {
+            const now = Date.now();
+            clickTimes.push(now);
+            
+            // Garder seulement les clics des 10 dernières secondes pour le calcul du taux
+            clickTimes = clickTimes.filter(time => now - time < 10000);
+            
+            const clickRate = clickTimes.length / 10;
+            
+            // Calculer la série actuelle
+            if (now - lastClickTime < 2000) {
+                currentStreak++;
+            } else {
+                currentStreak = 1;
+            }
+            
+            if (currentStreak > bestStreak) {
+                bestStreak = currentStreak;
+            }
+            
+            lastClickTime = now;
+            
+            // Mettre à jour l'affichage
+            elements.clickCount.textContent = clickCount;
+            elements.totalClicks.textContent = clickCount;
+            elements.clickRate.textContent = clickRate.toFixed(1);
+            elements.bestStreak.textContent = bestStreak;
+            
+            // Mettre à jour les défis
+            updateChallenges();
+        }
+
+        // Fonction pour mettre à jour les défis
+        function updateChallenges() {
+            const challenge1 = document.getElementById('challenge1');
+            const challenge2 = document.getElementById('challenge2');
+            const challenge3 = document.getElementById('challenge3');
+            
+            challenge1.style.width = Math.min(clickCount / 100 * 100, 100) + '%';
+            
+            const currentRate = clickTimes.length / 10;
+            challenge2.style.width = Math.min(currentRate / 5 * 100, 100) + '%';
+            
+            challenge3.style.width = Math.min(clickCount / 1000 * 100, 100) + '%';
+        }
+
+        // Fonction pour mettre à jour le temps de session
+        function updateSessionTime() {
+            if (!gameActive) return;
+            
+            const elapsed = Math.floor((Date.now() - sessionStart) / 1000);
+            elements.sessionTime.textContent = elapsed + 's';
+        }
+
+        // Gestionnaire de clic principal
+        
+        // Gestionnaire de clic principal
+        mainButton.addEventListener('click', function(e) {
+            if (!gameActive) return;
+
+            clickCount++;
+            updateStats();
+            createParticles(e.clientX, e.clientY);
+            createRipple(e);
+        });
+
+        // Mettre à jour le temps de session chaque seconde
+        setInterval(updateSessionTime, 1000);
+    </script>
+</body>
+</html>
