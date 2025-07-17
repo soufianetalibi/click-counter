@@ -91,3 +91,34 @@ git push origin v1.0.0
 -Créer une release
 
 -Exécuter un script
+
+=========================================
+
+git init
+git remote -v
+git remote add origin https://github.com/soufianetalibi/my-react-site.git
+git remote set-url origin https://github.com/soufianetalibi/my-react-site.git
+git remote -v
+git branch
+
+git add .
+git status
+git commit -m "Initial commit"
+git branch -M main
+git push -u origin main
+
+============================
+1-Enregistrer mes MAJ sur la branche DEV
+2-transférer de la branche DEV vers la branche main 
+3-
+4-voir les MAJ sur la gitpage liée à la branche main
+=====================================
+
+ git checkout main
+ git branch
+ git merge DEV (mais c'est local)
+transférer la MAJ : 
+ git add . 
+ git status
+ git commit -m "Mise a jour"
+ git push origin main
