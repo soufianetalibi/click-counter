@@ -122,3 +122,12 @@ transférer la MAJ :
  git status
  git commit -m "Mise a jour"
  git push origin main
+
+ ================================================================
+ si je perds le dossier en local : 
+
+ cd projets
+ git clone https://github.com/soufianetalibi/click-counter.git
+ cd click-counter
+ git checkout DEV
+
